@@ -1,0 +1,40 @@
+<html>
+<head>
+    <script type="text/javascript" src="cookiejacker.js"></script>
+    <script type="text/javascript">
+        function domloaded(){
+            cookiejacker.init();    // Hijack cookies (sets up shims which just call the browser's native getter and setter by default)
+            
+            cookiejacker.setGetter(function() { // Provide the shim with a custom callback to execute instead of default/native getter
+                cookie = cookiejacker.getCookie.call(this); // Call the browser's native getter to show how it's done.  We could do anything we like here, including modifying or preventing the retrieval altogether.
+                document.getElementById("output").innerHTML += "Intercepted cookie get: "+cookie+"<br />";  // And log the output to show we intercepted the "get cookie" request
+                return cookie;
+            });
+            
+            cookiejacker.setSetter(function(cookie) { // Provide the shim with a callback to execute instead of the default/native setter
+                document.getElementById("output").innerHTML += "Intercepted cookie set: "+cookie+"<br />";  // Log the output to show we intercepted the "set cookie" request
+                cookiejacker.setCookie.call(this, cookie);  // And call the browser's native setter to show how it's done.    We could do anything we like here, including modifying or preventing the setting of the cookie altogether.
+            });
+        }
+    </script>
+</head>    
+<body onload="domloaded();">
+
+    <p>Very simple demo of cookie interception using the library.  See page source to see how easy it is to hijack cookie creation and accessing functionality and replace/augment it with your own logic.</p>
+    
+    <h3>Process</h3>
+    <ol>
+        <li>Cookiejacker is init()ed on body onload, which causes shims to be put in place that hijack the browser's default cookie getter and setter</li>
+        <li>These shims provide their own default custom getter/setter which just call the browser's native getter and setter, to replicate the default behaviour until explicitly overridden with your custom code</li>
+        <li>We override these custom shims with our own special custom getter and setter, which log the cookie to the div below and then manually call the browser's native getter/setter to show how it's done.</li>
+        <li>We can then assign and read cookies as normal (<em>document.cookie="var=val"</em>, and <em>var x=document.cookie</em> respectively), except that the contents of the cookie is also intercepted and logged below.</li>
+    </ol>
+    
+    <p>This gives us the ability to intercept cookies whenever they're set or read, even from dynamically-loaded third-party code, and prevent or modify their creation or retrieval at our own discretion.</p>
+    
+    <input type="button" value="Set random cookie" onclick="document.cookie = 'random_cookie_val='+parseInt(Math.random()*10);" />
+    <input type="button" value="Read cookie" onclick="document.cookie;" />
+    <div id="output"></div>
+    
+</body>
+</html>
